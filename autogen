@@ -48,7 +48,24 @@ progress() {
 	echo ">>> $*"
 }
 
-test -r "$srcdir/configure.ac" || fail 'Cannot find configure.ac'
+if test -r "$srcdir/autogen.rc" ; then
+	. "$srcdir/autogen.rc"
+fi
+
+if test x"${SUBDIRS}" = x"" ; then
+	true
+else
+	for i in ${SUBDIRS} ; do
+		if test -d "$i" ; then
+			progress "Generating files in $i"
+			( cd "$srcdir/$i" && "$toolsdir/autogen" ) || exit $?
+		else
+			echo "autogen: $srcdir/$i does not exist" >&2
+		fi
+	done
+fi
+
+test -r "$srcdir/configure.ac" || fail "Cannot find configure.ac in $srcdir"
 
 progress "Generating aclocal.m4"
 ${ACLOCAL110} -I"$toolsdir" || exit
