@@ -3,7 +3,7 @@
 # Jazzio Labs Autotools support
 # @(#) $Id$
 
-# Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Mo McRoberts.
+# Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 Mo McRoberts.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -44,8 +44,11 @@ fail() {
 	exit 1
 }
 
-progress() {
+oprogress() {
 	echo ">>> $*"
+}
+progress() {
+	echo " +> $*"
 }
 
 if test -r "$srcdir/autogen.rc" ; then
@@ -57,7 +60,6 @@ if test x"${SUBDIRS}" = x"" ; then
 else
 	for i in ${SUBDIRS} ; do
 		if test -d "$i" ; then
-			progress "Generating files in $i"
 			( cd "$srcdir/$i" && "$toolsdir/autogen" ) || exit $?
 		else
 			echo "autogen: $srcdir/$i does not exist" >&2
@@ -65,8 +67,22 @@ else
 	done
 fi
 
+if test x"${DECL_H_PATH}" = x"" || test x"${DECL_H_PREFIX}" = x"" ; then
+	true
+else
+	sed -e "s!%PREFIX%!${DECL_H_PREFIX}!g" < "$toolsdir/decl.h.in" > "${DECL_H_PATH}.in"
+	if test -r "${DECL_H_PATH}" && diff "${DECL_H_PATH}" "${DECL_H_PATH}.in" >/dev/null ; then
+		progress "${DECL_H_PATH} is unchanged"
+		rm -f "${DECL_H_PATH}.in"
+	else
+		progress "Installing ${DECL_H_PATH}"
+		mv "${DECL_H_PATH}.in" "${DECL_H_PATH}"
+	fi
+fi
+
 test -r "$srcdir/configure.ac" || fail "Cannot find configure.ac in $srcdir"
 
+oprogress "Generating files in $srcdir"
 progress "Generating aclocal.m4"
 ${ACLOCAL110} -I"$toolsdir" || exit
 
