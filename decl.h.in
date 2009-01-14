@@ -1,0 +1,125 @@
+/* @(#) $Id$ */
+
+/*
+ * Copyright (c) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Mo McRoberts.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The names of the author(s) of this software may not be used to endorse
+ *    or promote products derived from this software without specific prior
+ *    written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * AUTHORS OF THIS SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/* This header is deliberately not protected against multiple inclusion
+ * because these macros should be re-defined each time this header is
+ * included.
+ */
+
+#undef %PREFIX%_EXPORT
+#undef %PREFIX%_LOCAL_SYM
+#undef %PREFIX%_ALIAS
+#undef %PREFIX%_SYM
+#undef %PREFIX%_EXPORTED
+#undef %PREFIX%_IMPORTED
+#undef %PREFIX%_EXTERNC
+#undef %PREFIX%_DECLAREC
+#undef %PREFIX%_EXPORT
+#undef %PREFIX%_CEXPORT
+#undef %PREFIX%_ALIAS_MACROS
+
+#if !defined(%PREFIX%__STRING)
+# define %PREFIX%__TOSTRING(__x)             #__x
+# define %PREFIX%__STRING(__x)               %PREFIX%__TOSTRING(__x)
+# define %PREFIX%__STRING2(__x, __y)         %PREFIX%__TOSTRING(__x) %PREFIX%__TOSTRING(__y)
+# define %PREFIX%__STRING3(__x, __y, __z)    %PREFIX%__TOSTRING(__x) %PREFIX%__TOSTRING(__y) %PREFIX%__TOSTRING(__z)
+# define %PREFIX%__ISTR3(__x, __s1, __y, __s2, __z) %PREFIX%__TOSTRING(__x) __s1 %PREFIX%__TOSTRING(__y) __s2 %PREFIX%__TOSTRING(__z)
+# define %PREFIX%__ISTR2(__x, __s, __y)      %PREFIX%__TOSTRING(__x) __s %PREFIX%__TOSTRING(__y)
+#endif
+
+#if defined(%PREFIX%_SYM_PREFIX) && defined(%PREFIX%_SYM_SUFFIX)
+# define %PREFIX%_LOCAL_SYM(__x)            %PREFIX%_SYM_PREFIX##_##__x##_##%PREFIX%_SYM_SUFFIX
+# define %PREFIX%_LOCAL_SYMSTR(__x)         %PREFIX%__ISTR3(%PREFIX%_SYM_PREFIX, "$", __x, "$", %PREFIX%_SYM_SUFFIX)
+#elif defined(%PREFIX%_SYM_PREFIX)
+# define %PREFIX%_LOCAL_SYM(__x)            %PREFIX%_SYM_PREFIX##_##__x
+# define %PREFIX%_LOCAL_SYMSTR(__x)         %PREFIX%__ISTR2(%PREFIX%_SYM_PREFIX, "$", __x)
+#elif defined(%PREFIX%_SYM_SUFFIX)
+# define %PREFIX%_LOCAL_SYM(__x)            __x##_##%PREFIX%_SYM_SUFFIX
+# define %PREFIX%_LOCAL_SYMSTR(__x)         %PREFIX%__ISTR2(__x, "$", %PREFIX%_SYM_SUFFIX)
+#endif
+
+#if !defined(%PREFIX%_ASM_PREFIX)
+# if defined(_WIN32) || defined(__APPLE__)
+#  define %PREFIX%_ASM_PREFIX               "_"
+# else
+#  define %PREFIX%_ASM_PREFIX               ""
+# endif
+#endif
+
+#if defined %PREFIX%_LOCAL_SYM
+# if defined(__GNUC__)
+#  define %PREFIX%_SYM(__x)                 __x
+#  define %PREFIX%_ALIAS(__x)               __asm(%PREFIX%_ASM_PREFIX %PREFIX%_LOCAL_SYMSTR(__x))
+# else
+#  define %PREFIX%_SYM(__x)                 %PREFIX%_LOCAL_SYM(__x)
+#  define %PREFIX%_ALIAS(__x)               /* */
+#  define %PREFIX%_ALIAS_MACROS             1
+# endif
+#else
+# define %PREFIX%_SYM(__x)                  __x
+# define %PREFIX%_ALIAS(__x)                /* */
+#endif
+
+#if defined(_WIN32)
+# if defined(__GNUC__)
+#  define %PREFIX%_EXPORTED                 __attribute__((dllexport))
+#  define %PREFIX%_IMPORTED                 __attribute__((dllimport))
+# else
+#  define %PREFIX%_EXPORTED                 __declspec(dllexport)
+#  define %PREFIX%_IMPORTED                 __declspec(dllimport)
+# endif
+#elif defined(__GNUC__)
+# define %PREFIX%_EXPORTED                  __attribute__((visibility("default")))
+# define %PREFIX%_IMPORTED                  /* */
+#endif
+
+#if defined(__cplusplus)
+# define %PREFIX%_EXTERNC                   extern "C"
+# define %PREFIX%_DECLAREC                  extern "C"
+#else
+# define %PREFIX%_EXTERNC                   extern
+# define %PREFIX%_DECLAREC                  /* */
+#endif
+
+#ifdef %PREFIX%_EXPORTS
+# define %PREFIX%_EXPORT                    %PREFIX%_EXPORTED
+#else
+# define %PREFIX%_EXPORT                    %PREFIX%_IMPORTED
+#endif
+
+#define %PREFIX%_CEXPORT                    %PREFIX%_EXTERNC %PREFIX%_EXPORT
+
+#if !defined(__stdcall)
+# if defined(__GNUC__)
+#  define __stdcall                   __attribute__((stdcall))
+# else
+#  define __stdcall                    /* */
+# endif
+#endif
+
