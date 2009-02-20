@@ -67,7 +67,7 @@ if test x"${jl_req_found}" = x"no" ; then
 		AC_MSG_CHECKING([for included ]$2[ sources in $jl_req_incsrc])
 		if test -d "$jl_req_incsrc" ; then
 			jl_req_found="included"
-			ac_configure_args="--with-$3-sources=`cd \"$jl_req_incsrc\" && pwd` $ac_sub_configure_args"
+			ac_configure_args="--with-$3-sources=`cd \"$jl_req_incsrc\" && pwd` $ac_configure_args"
 			AC_MSG_RESULT([found])
 		else
 			AC_MSG_RESULT([not found])
