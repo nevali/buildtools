@@ -28,16 +28,50 @@ dnl
 
 m4_pattern_forbid(^JL_)dnl
 m4_pattern_forbid(^_JL_)dnl
-AC_DEFUN([JL_REQUIRE_PHP5],[
-	AC_CHECK_PROG(PHP_5, php-5, php-5)
-
-	if test x"${PHP_5}" = x"" ; then
-		AC_CHECK_PROG(PHP_5, php, php)
+AC_DEFUN([JL_REQUIRE_PHP5],[AC_REQUIRE([JL_REQUIRE_PHP5_])])dnl
+AC_DEFUN([JL_REQUIRE_PHP5_],[
+	AC_ARG_WITH(php-config,[AS_HELP_STRING([--with-php-config=PATH],[specify path to the php-config script (e.g., /usr/local/php5/bin/php-config)])],[phpconfig=$withval],[phpconfig=''])
+	phppath="$PATH"
+	if test x"$phpconfig" = x"" ; then
+		AC_PATH_PROG(phpconfig, php-config-5)
 	fi
-	
+	if test x"$phpconfig" = x"" ; then
+		AC_PATH_PROG(phpconfig, php-config5)
+	fi
+	if test x"$phpconfig" = x"" ; then
+		AC_PATH_PROG(phpconfig, php-config)
+	fi
+	if test x"$phpconfig" = x"" ; then
+		AC_MSG_ERROR([cannot locate your php-config script (see --with-php-config)])
+	fi
+	phprootdir=`${phpconfig} --prefix`
+	phpincludes=`${phpconfig} --includes`
+	phpldflags="`${phpconfig} --ldflags` -R${phpdir}/lib"
+	phplibs=`${phpconfig} --libs`
+	PHP_5=`${phpconfig} --php-binary`
+	phppath="${phpdir}/bin:${phppath}"
+	if test x"${PHP_5}" = x"" ; then
+		AC_PATH_PROG(PHP_5, php-5)
+	fi
+	if test x"${PHP_5}" = x"" ; then
+		AC_PATH_PROG(PHP_5, php5)
+	fi
+	if test x"${PHP_5}" = x"" ; then
+		AC_PATH_PROG(PHP_5, php-5)
+	fi
 	dnl TODO: Check that ${PHP_5} is actually PHP 5
-	
-	if test x"${PHP_5}" = x"" ; then
-		AC_MSG_ERROR([Cannot find your PHP command-line interpreter. You must have built PHP with the --enable-cli configuration option.])
+
+	AC_PATH_PROG(PHPIZE_5, phpize-5,,$phppath)
+
+	if test x"${PHPIZE_5}" = x"" ; then
+		AC_PATH_PROG(PHPIZE_5, phpize5,,$phppath)
 	fi
+	if test x"${PHPIZE_5}" = x"" ; then
+		AC_PATH_PROG(PHPIZE_5, phpize,,$phppath)
+	fi
+	
+	phpdir="${phprootdir}/share/php"
+	AC_SUBST(phpdir)
+	AC_SUBST(PHP_5)
+	AC_SUBST(PHPIZE_5)
 ])
