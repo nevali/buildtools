@@ -30,6 +30,9 @@ m4_pattern_forbid(^_JL_)dnl
 dnl Override _AC_INIT_PARSE_ENABLE to deal with 
 m4_pushdef([_AC_INIT_PARSE_ENABLE],m4_defn([_AC_INIT_PARSE_ENABLE])[
 m4_if([$1],[with],[
+  -domain=*|--domain=*)
+	bundledomain=$ac_optarg
+	;;
   -librarydir=*|--librarydir=*)
 	librarydir=$ac_optarg
 	;;
@@ -50,10 +53,13 @@ m4_divert_push([HELP_BEGIN])dnl
 m4_changequote(==,==)dnl
 
 Bundle installation paths (for --enable-bundles):
-  --librarydir=DIR       bundled Libary path [/Library or PREFIX/lib/GNUstep]
+  --domain=NAME          Install bundles into domain NAME (system, network, 
+                         local, or user)
+  --librarydir=DIR       bundled Libary path [DOMAINDIR/Library or
+                         $GNUSTEP_xxx_LIBRARY]
   --frameworkdir=DIR     bundled Frameworks path [LIBRARYDIR/Frameworks]
-  --appsdir=DIR          bundled Applications path [/Applications or 
-                         LIBRARYDIR/Applications]
+  --appsdir=DIR          bundled Applications path [DOMAINDIR/Applications or 
+                         $GNUSTEP_xxx_APPS]
   --appsupportdir=DIR    application support path [LIBRARYDIR/Application 
                          Support]
 m4_changequote([,])dnl
@@ -74,23 +80,28 @@ dnl   determine librarydir, frameworkdir, appsdir, appsupportdir
 AC_DEFUN([JL_CHECK_BUNDLES],[
 AC_REQUIRE([_JL_BUNDLE_HELP])
 AC_REQUIRE([AC_CANONICAL_HOST])
+AC_REQUIRE([_JL_GNUSTEP_INIT])
 AC_ARG_ENABLE(bundles, [AS_HELP_STRING([--enable-bundles],[Install libraries and applications as bundles (default=no)])],[jl_build_bundles=$enableval],[jl_build_bundles=auto])
 AC_MSG_CHECKING([whether to install frameworks and applications as bundles])
 if test x"${jl_enable_bundles_auto}" = x"" ; then
 	case "$host_os" in
 		darwin*|rhapsody*|nextstep*|openstep*)
-			jl_build_bundles_auto='yes'
+			jl_enable_bundles_auto='yes'
 			;;
 		*)
-			jl_build_bundles_auto='no'
+			if test x"$gnustep_enable" = x"yes" && test x"$gnustep_explicit" = x"yes" ; then
+				jl_enable_bundles_auto='yes'
+			else
+				jl_enable_bundles_auto='no'
+			fi
 			;;
 	esac
 fi
-case "$jl_build_bundles" in
+case "$jl_enable_bundles" in
 	yes|no)
 		;;
 	*)
-		jl_build_bundles="${jl_build_bundles_auto}"
+		jl_enable_bundles="${jl_enable_bundles_auto}"
 		;;
 esac
 AC_MSG_RESULT([${jl_enable_bundles}])
@@ -100,12 +111,16 @@ case "$host_os" in
 		defappsdir='/LocalApps'
 		;;
 	darwin*|rhapsody*)
-		deflibrarydir='/Library'
-		defappsdir='/Applications'
+		_JL_BUNDLE_MACPATHS
 		;;
 	*)
-		deflibrarydir='${exec_prefix}/lib/GNUstep'
-		defappsdir='${librarydir}/Applications'
+		if test x"$gnustep_enable" = x"yes" ; then
+			_JL_BUNDLE_GSPATHS
+		else
+			_JL_BUNDLE_DEFPATHS
+			deflibrarydir='${exec_prefix}/lib/GNUstep'
+			defappsdir='${librarydir}/Applications'
+		fi
 		;;
 esac
 test x"$librarydir" = x"" && librarydir="$deflibrarydir"
@@ -116,8 +131,6 @@ AC_SUBST([librarydir])
 AC_SUBST([appsdir])
 AC_SUBST([frameworkdir])
 AC_SUBST([appsupportdir])
-BUNDLEFIXUP='${SHELL} ${top_srcdir}/bundlefixup.sh'
-AC_SUBST([BUNDLEFIXUP])
 ])dnl
 dnl
 dnl JL_BUNDLE_PATHS(varpfx, path, basename)
@@ -191,3 +204,67 @@ JL_BUNDLE_PATHS([$1],[${librarydir}/Subsystems/]$2[.subsystem],[$2])
 JL_BUNDLE_PATHS([$1],$3[/Contents/Resources/]$2[.subsystem],[$2])
 ])dnl
 ])dnl
+AC_DEFUN([_JL_BUNDLE_DOMAIN],[
+test x"$bundledomain" = x"" && bundledomain=local
+case "$bundledomain" in
+	system|network|local|user)
+		;;
+	*)
+		AC_MSG_ERROR([bundle domain $bundledomain is not supported. must be one of system, network, local or user])
+		;;
+esac
+])
+
+AC_DEFUN([_JL_BUNDLE_GSPATHS],[
+AC_REQUIRE([_JL_BUNDLE_DOMAIN])
+JL_GNUSTEP_VAR([GNUSTEP_SYSTEM_APPS])
+JL_GNUSTEP_VAR([GNUSTEP_NETWORK_APPS])
+JL_GNUSTEP_VAR([GNUSTEP_LOCAL_APPS])
+JL_GNUSTEP_VAR([GNUSTEP_USER_APPS])
+JL_GNUSTEP_VAR([GNUSTEP_SYSTEM_LIBRARY])
+JL_GNUSTEP_VAR([GNUSTEP_NETWORK_LIBRARY])
+JL_GNUSTEP_VAR([GNUSTEP_LOCAL_LIBRARY])
+JL_GNUSTEP_VAR([GNUSTEP_USER_LIBRARY])
+case "$bundledomain" in
+	system)
+		deflibrarydir="$GNUSTEP_SYSTEM_LIBRARY"
+		defappsdir="$GNUSTEP_SYSTEM_APPS"
+		;;
+	network)
+		deflibrarydir="$GNUSTEP_NETWORK_LIBRARY"
+		defappsdir="$GNUSTEP_NETWORK_APPS"
+		;;
+	local)
+		deflibrarydir="$GNUSTEP_LOCAL_LIBRARY"
+		defappsdir="$GNUSTEP_LOCAL_APPS"
+		;;
+	user)
+		deflibrarydir="$GNUSTEP_USER_LIBRARY"
+		defappsdir="$GNUSTEP_USER_APPS"
+		;;
+esac
+])
+AC_DEFUN([_JL_BUNDLE_MACPATHS],[
+AC_REQUIRE([_JL_BUNDLE_DOMAIN])
+case "$bundledomain" in
+	system)
+		defappsdir="/Applications"
+		deflibrarydir="/System/Library"
+		;;
+	network)
+		defappsdir="/Network/Applications"
+		deflibrarydir="/Network/Library"
+		;;
+	local)
+		defappsdir="/Applications"
+		deflibrarydir="/Library"
+		;;
+	user)
+		defappsdir="$HOME/Applications"
+		deflibrarydir="$HOME/Library"
+		;;
+esac
+])
+AC_DEFUN([_JL_BUNDLE_DEFPATHS],[
+_JL_BUNDLE_MACPATHS
+])
