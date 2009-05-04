@@ -81,7 +81,7 @@ AC_DEFUN([JL_CHECK_BUNDLES],[
 AC_REQUIRE([_JL_BUNDLE_HELP])
 AC_REQUIRE([AC_CANONICAL_HOST])
 AC_REQUIRE([_JL_GNUSTEP_INIT])
-AC_ARG_ENABLE(bundles, [AS_HELP_STRING([--enable-bundles],[Install libraries and applications as bundles (default=no)])],[jl_build_bundles=$enableval],[jl_build_bundles=auto])
+AC_ARG_ENABLE(bundles, [AS_HELP_STRING([--enable-bundles],[Install libraries and applications as bundles (default=no)])],[jl_enable_bundles=$enableval],[jl_enable_bundles=auto])
 AC_MSG_CHECKING([whether to install frameworks and applications as bundles])
 if test x"${jl_enable_bundles_auto}" = x"" ; then
 	case "$host_os" in
