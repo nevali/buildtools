@@ -33,6 +33,7 @@ LIBTOOLIZE15=${LIBTOOLIZE15-libtoolize15}
 ACLOCAL110=${ACLOCAL110-aclocal110}
 AUTOMAKE110=${AUTOMAKE110-automake110}
 AUTOCONF26=${AUTOCONF26-autoconf26}
+AUTORECONF=${AUTORECONF-autoreconf}
 
 appname="$0"
 srcdir="`pwd`"
@@ -82,6 +83,11 @@ fi
 
 test -r "$srcdir/configure.ac" || fail "Cannot find configure.ac in $srcdir"
 
+if test -f autogen.sh ; then
+	oprogress "Running autoreconf to generate files"
+	${AUTORECONF} -f -i
+	exit
+fi
 oprogress "Generating files in $srcdir"
 progress "Generating aclocal.m4"
 ${ACLOCAL110} -I"$toolsdir" || exit
@@ -102,4 +108,3 @@ fi
 
 progress "Generating configure script"
 ${AUTOCONF26} || exit
-
