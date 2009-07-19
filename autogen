@@ -90,7 +90,11 @@ if test -f autogen.sh ; then
 fi
 oprogress "Generating files in $srcdir"
 progress "Generating aclocal.m4"
-${ACLOCAL110} -I"$toolsdir" || exit
+aclocalopts="-I$toolsdir"
+if test -d "$srcdir/m4" ; then
+	aclocalopts="$aclocalopts -I$srcdir/m4"
+fi
+${ACLOCAL110} $aclocalopts || exit
 
 if egrep '^AC_CONFIG_HEADER' "$srcdir/configure.ac" >/dev/null ; then
 	progress "Generating config.h.in"
