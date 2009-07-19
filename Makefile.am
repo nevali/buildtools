@@ -24,4 +24,4 @@
 ## SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 EXTRA_DIST = autogen decl.h.in LICENSE \
-	packages.m4 php5.m4 bundles.m4 gnustep.m4
+	packages.m4 php5.m4 bundles.m4 gnustep.m4 config.m4
