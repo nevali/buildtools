@@ -26,16 +26,9 @@
 ## NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
 ## SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-SUBDIRS = ext
+EXTRA_DIST = pkg.m4
 
-EXTRA_DIST = autogen decl.h.in LICENSE \
-	packages.m4 php5.m4 bundles.m4 gnustep.m4 config.m4
+autogen_exttoolsdir = ${autogen_toolsdir}/ext
 
-bin_SCRIPTS = .tmp/autogen
-
-autogen_tools_DATA = decl.h.in LICENSE \
-	packages.m4 php5.m4 bundles.m4 gnustep.m4 config.m4
-
-.tmp/autogen: autogen.inst
-	test -d .tmp || mkdir .tmp
-	cp autogen.inst .tmp/autogen
+autogen_exttools_DATA = README \
+	pkg.m4

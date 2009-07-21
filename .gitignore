@@ -1,2 +1,13 @@
 Makefile
 Makefile.in
+aclocal.m4
+configure
+config.log
+config.status
+config.cache
+autom4te.cache
+install-sh
+missing
+INSTALL
+autogen.inst
+.tmp

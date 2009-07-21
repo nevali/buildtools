@@ -1,0 +1,8 @@
+This directory contains m4 macros which aren't part of buildtools itself,
+but are so widely-used that they're included for convenience.
+
+These macros are not required for the proper operation of buildtools and
+are distributed purely for convenience of those building needing to
+re-generate configure scripts.
+
+See the individual files for licensing terms.
