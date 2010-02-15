@@ -123,9 +123,12 @@ elif test x"$apply_patches" = x"yes" ; then
 		elif test x"$subdir" = x"" ; then
 			progress "$patch"
 			cd $srcdir && patch -p1 < $patchdir/$patch || exit $?
-		else
+		elif test -d "$srcdir/$subdir" ; then
 			progress "$subdir -> $patch"
-			cd $srcdir/$subdir && patch -p1 < $patchdir/$patch || exit $?			
+			cd $srcdir/$subdir && patch -p1 < $patchdir/$patch || exit $?
+		else
+			progress "Skipping $patch (subdirectory $subdir is not present)"
+			continue
 		fi
 		touch $here/.$patch-applied
 	done
