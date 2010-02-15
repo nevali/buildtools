@@ -31,7 +31,11 @@ SUBDIRS = ext
 EXTRA_DIST = autogen decl.h.in LICENSE \
 	packages.m4 php5.m4 bundles.m4 gnustep.m4 config.m4
 
+if BUILDTOOLS_NOINST
+noinst_SCRIPTS = autogen
+else
 bin_SCRIPTS = .tmp/autogen
+endif
 
 autogen_tools_DATA = decl.h.in LICENSE \
 	packages.m4 php5.m4 bundles.m4 gnustep.m4 config.m4

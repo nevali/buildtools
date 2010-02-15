@@ -6,7 +6,7 @@ AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE
 
 autogen_toolsdir='${datadir}/buildtools'
-AC_SUBST([autogen_toolsdir])
+BUILDTOOLS_INIT
 
 AC_CONFIG_FILES([
 Makefile

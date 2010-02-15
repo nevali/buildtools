@@ -38,6 +38,44 @@ AUTORECONF=${AUTORECONF-autoreconf}
 appname="$0"
 srcdir="`pwd`"
 
+recurse=yes
+apply_patches=yes
+force_patches=no
+quiet=no
+
+autogen_help() {
+	echo "usage: $0 [OPTIONS]"
+	echo ""
+	echo "OPTIONS are one or more of:"
+	echo "  --help                   Display this message and exit"
+	echo "  --no-recurse or -nr      Don't recurse into subdirectories"
+	echo "  --no-patches or -np      Don't apply patches"
+	echo "  --force-patches or -fp   Re-apply patches even if apparently not needed"
+	echo "  --quiet or -q            Don't print progress"
+	exit
+}
+
+for i ; do
+	case "$i" in
+		--help)
+			autogen_help
+			;;
+		--no-recurse|-nr)
+			recurse=no
+			;;
+		--no-patches|-np)
+			apply_patches=no
+			;;
+		--force-patches|-fp)
+			apply_patches=yes
+			force_patches=yes
+			;;
+		--quiet|-q)
+			quiet=yes
+			;;
+	esac
+done
+
 ## When configuring an installable autogen script, these will be replaced
 ## by config.status.
 prefix="@prefix@"
@@ -61,19 +99,42 @@ fail() {
 }
 
 oprogress() {
-	echo ">>> $*"
+	test x"$quiet" = x"no" && echo ">>> $*"
 }
 progress() {
-	echo " +> $*"
+	test x"$quiet" = x"no" && echo " +> $*"
 }
 
 if test -r "$srcdir/autogen.rc" ; then
 	. "$srcdir/autogen.rc"
 fi
 
+if test x"${PATCHES}" = x"" ; then
+	true
+elif test x"$apply_patches" = x"yes" ; then
+	here="`pwd`"
+	patchdir="$srcdir/patches"
+	oprogress "Applying patches from $patchdir"
+	for i in ${PATCHES} ; do
+		subdir=`echo $i | cut -f1 -d:`
+		patch=`echo $i | cut -f2- -d:`
+		if test x"$force_patches" = x"no" && test -r $here/.$patch-applied ; then
+			progress "Skipping $patch (already applied)"
+		elif test x"$subdir" = x"" ; then
+			progress "$patch"
+			cd $srcdir && patch -p1 < $patchdir/$patch || exit $?
+		else
+			progress "$subdir -> $patch"
+			cd $srcdir/$subdir && patch -p1 < $patchdir/$patch || exit $?			
+		fi
+		touch $here/.$patch-applied
+	done
+	cd "$here"
+fi
+
 if test x"${SUBDIRS}" = x"" ; then
 	true
-else
+elif test x"$recurse" = x"yes" ; then
 	for i in ${SUBDIRS} ; do
 		if test -d "$i" ; then
 			( cd "$srcdir/$i" && "$toolsdir/autogen" ) || exit $?
@@ -99,7 +160,7 @@ fi
 test -r "$srcdir/configure.ac" || fail "Cannot find configure.ac in $srcdir"
 
 if test -f autogen.sh ; then
-	oprogress "Running autoreconf to generate files"
+	oprogress "Running autoreconf to generate files in $srcdir"
 	${AUTORECONF} -f -i
 	exit
 fi
