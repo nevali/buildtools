@@ -34,6 +34,19 @@ ACLOCAL110=${ACLOCAL110-aclocal110}
 AUTOMAKE110=${AUTOMAKE110-automake110}
 AUTOCONF26=${AUTOCONF26-autoconf26}
 AUTORECONF=${AUTORECONF-autoreconf}
+GPATCH=${GPATCH-patch}
+
+## Set these for autoreconf
+AUTOHEADER=${AUTOHEADER-${AUTOHEADER26}}
+export AUTOHEADER
+LIBTOOLIZE=${LIBTOOLIZE-${LIBTOOLIZE15}}
+export LIBTOOLIZE
+ACLOCAL=${ACLOCAL-${ACLOCAL110}}
+export ACLOCAL
+AUTOMAKE=${AUTOMAKE-${AUTOMAKE110}}
+export AUTOMAKE
+AUTOCONF=${AUTOCONF-${AUTOCONF26}}
+export AUTOCONF
 
 appname="$0"
 srcdir="`pwd`"
@@ -122,10 +135,10 @@ elif test x"$apply_patches" = x"yes" ; then
 			progress "Skipping $patch (already applied)"
 		elif test x"$subdir" = x"" ; then
 			progress "$patch"
-			cd $srcdir && patch -p1 < $patchdir/$patch || exit $?
+			cd $srcdir && ${GPATCH} -p1 < $patchdir/$patch || exit $?
 		elif test -d "$srcdir/$subdir" ; then
 			progress "$subdir -> $patch"
-			cd $srcdir/$subdir && patch -p1 < $patchdir/$patch || exit $?
+			cd $srcdir/$subdir && ${GPATCH} -p1 < $patchdir/$patch || exit $?
 		else
 			progress "Skipping $patch (subdirectory $subdir is not present)"
 			continue
