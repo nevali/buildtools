@@ -28,8 +28,9 @@
 
 SUBDIRS = ext
 
-EXTRA_DIST = autogen decl.h.in LICENSE \
-	packages.m4 php5.m4 bundles.m4 gnustep.m4 config.m4
+EXTRA_DIST = autogen decl.h.in LICENSE PROJECT-README \
+	buildtools.m4 bundles.m4 config.m4 gnustep.m4 packages.m4 php5.m4 \
+	configure.ac
 
 if BUILDTOOLS_NOINST
 noinst_SCRIPTS = autogen

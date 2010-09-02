@@ -31,4 +31,4 @@ EXTRA_DIST = pkg.m4
 autogen_exttoolsdir = ${autogen_toolsdir}/ext
 
 autogen_exttools_DATA = README \
-	pkg.m4
+	pkg.m4 ax_boost_detect.m4
