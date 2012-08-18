@@ -1,9 +1,8 @@
 #! /bin/sh
 
-# Nexgenta Build Tools
-# http://developer.nexgenta.com/buildtools/
-#
-# Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Mo McRoberts.
+## Build tools: Scripts and macros to enhance autotools
+
+# Copyright (c) 2003-2012 Mo McRoberts.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -32,11 +31,11 @@ if test -r "$HOME/.autogenrc" ; then
 	. "$HOME/.autogenrc"
 fi
 
-AUTOHEADER26=${AUTOHEADER26-autoheader26}
-LIBTOOLIZE15=${LIBTOOLIZE15-libtoolize15}
-ACLOCAL110=${ACLOCAL110-aclocal110}
-AUTOMAKE110=${AUTOMAKE110-automake110}
-AUTOCONF26=${AUTOCONF26-autoconf26}
+AUTOHEADER26=${AUTOHEADER26-autoheader}
+LIBTOOLIZE15=${LIBTOOLIZE15-libtoolize}
+ACLOCAL110=${ACLOCAL110-aclocal}
+AUTOMAKE110=${AUTOMAKE110-automake}
+AUTOCONF26=${AUTOCONF26-autoconf}
 AUTORECONF=${AUTORECONF-autoreconf}
 GPATCH=${GPATCH-patch}
 
@@ -59,6 +58,7 @@ recurse=yes
 apply_patches=yes
 force_patches=no
 quiet=no
+verbose=no
 
 autogen_help() {
 	echo "usage: $0 [OPTIONS]"
@@ -69,6 +69,7 @@ autogen_help() {
 	echo "  --no-patches or -np      Don't apply patches"
 	echo "  --force-patches or -fp   Re-apply patches even if apparently not needed"
 	echo "  --quiet or -q            Don't print progress"
+	echo "  --verbose or -v          Print commands as they are executed"
 	exit
 }
 
@@ -89,6 +90,9 @@ for i ; do
 			;;
 		--quiet|-q)
 			quiet=yes
+			;;
+		--verbose|-v)
+			verbose=yes
 			;;
 	esac
 done
@@ -116,10 +120,13 @@ fail() {
 }
 
 oprogress() {
-	test x"$quiet" = x"no" && echo ">>> $*"
+	test x"$quiet" = x"no" && echo ">>> $*" >&2
 }
 progress() {
-	test x"$quiet" = x"no" && echo " +> $*"
+	test x"$quiet" = x"no" && echo " +> $*" >&2
+}
+cmd() {
+	test x"$verbose" = x"yes" && echo " +  $*" >&2
 }
 
 if test -r "$srcdir/autogen.rc" ; then
@@ -142,6 +149,7 @@ elif test x"$apply_patches" = x"yes" ; then
 			cd $srcdir && ${GPATCH} -p1 < $patchdir/$patch || exit $?
 		elif test -d "$srcdir/$subdir" ; then
 			progress "$subdir -> $patch"
+			cmd "${GPATCH} -p1 < $patchdir/$patch "
 			cd $srcdir/$subdir && ${GPATCH} -p1 < $patchdir/$patch || exit $?
 		else
 			progress "Skipping $patch (subdirectory $subdir is not present)"
@@ -181,6 +189,7 @@ test -r "$srcdir/configure.ac" || fail "Cannot find configure.ac in $srcdir"
 
 if test -f autogen.sh ; then
 	oprogress "Running autoreconf to generate files in $srcdir"
+	cmd "${AUTORECONF} -f i"
 	${AUTORECONF} -f -i
 	exit
 fi
@@ -190,21 +199,26 @@ aclocalopts="-I$toolsdir -I$toolsdir/ext"
 if test -d "$srcdir/m4" ; then
 	aclocalopts="$aclocalopts -I$srcdir/m4"
 fi
+cmd "${ACLOCAL110} $aclocalopts"
 ${ACLOCAL110} $aclocalopts || exit
 
 if egrep '^AC_CONFIG_HEADER' "$srcdir/configure.ac" >/dev/null ; then
 	progress "Generating config.h.in"
+	cmd "${AUTOHEADER26}"
 	${AUTOHEADER26} || exit
 fi
 if egrep '^AC_PROG_LIBTOOL' "$srcdir/configure.ac" >/dev/null ; then
 	progress "Generating ltmain.sh"
+	cmd "${LIBTOOLIZE15}"
 	${LIBTOOLIZE15} --force --copy --automake || exit
 fi
 
 if egrep "^AM_INIT_AUTOMAKE" "$srcdir/configure.ac" >/dev/null ; then
 	progress "Generating Makefile.in from Makefile.am"
+	cmd "${AUTOMAKE110}"
 	${AUTOMAKE110} --add-missing --copy || exit
 fi
 
 progress "Generating configure script"
+cmd "${AUTOCONF26}"
 ${AUTOCONF26} || exit
